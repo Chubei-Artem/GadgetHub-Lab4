@@ -74,6 +74,7 @@ body {
     animation: pulse 2s infinite;
     /* attention pulse effect */
 }
+
 #news-headers-list {
     list-style: none !important;
     padding: 0 !important;
@@ -396,7 +397,7 @@ body {
 }
 
 
-/* === ВАЛІДАЦІЯ ФОРМ === */
+/* ВАЛІДАЦІЯ ФОРМ */
 .form-group {
     margin-bottom: 15px;
     text-align: left;
@@ -495,7 +496,7 @@ body {
     color: white !important;
 }
 
-/* === ЛАЙАУТ НОВИН === */
+/* ЛАЙАУТ НОВИН */
 .news-layout {
     display: flex;
     gap: 20px;
@@ -515,7 +516,7 @@ body {
     border-radius: 10px;
 }
 
-/* === ГРАФІКИ === */
+/* ГРАФІКИ */
 #analytics-section {
     margin: 40px auto;
     max-width: 1200px;
@@ -530,7 +531,7 @@ body {
     margin: 0 auto;
 }
 
-/* === МОБІЛЬНА АДАПТАЦІЯ === */
+/* МОБІЛЬНА АДАПТАЦІЯ */
 @media (max-width: 768px) {
     .news-layout {
         flex-direction: column;
