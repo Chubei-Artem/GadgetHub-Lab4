@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GadgetHub - Електроніка</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- НАВІГАЦІЯ -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">GadgetHub</div>
+            <div class="search-box">
+                <input type="text" id="main-search" placeholder="Пошук...">
+                <button>Пошук</button>
+            </div>
+            <div class="nav-icons">
+                <button class="auth-btn" id="auth-btn">Увійти</button>
+                <button id="logout-btn" class="logout-btn" style="display: none;">🚪 Вийти</button>
+                <button class="cart-btn" id="cart-btn">🛒 Кошик <span id="cart-count">0</span></button>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <!-- НОВИНИ -->
+        <section id="news-section">
+            <h2>Новини компанії</h2>
+            <div class="news-layout">
+                <aside class="news-sidebar">
+                    <ul id="news-headers-list"></ul>
+                    <button id="load-more-news">Більше новин</button>
+                </aside>
+                <article class="news-main" id="news-content-area">
+                    <p>Оберіть новину зі списку зліва...</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- КАРУСЕЛЬ -->
+        <section id="hot-deals" class="carousel-container">
+            <div class="carousel-viewport">
+                <div class="carousel-inner" id="carousel-inner"></div>
+                <button class="carousel-prev" id="carousel-prev">‹</button>
+                <button class="carousel-next" id="carousel-next">›</button>
+            </div>
+        </section>
+
+        <!-- ТОВАРИ + ФІЛЬТРИ -->
+        <section id="shop-section">
+            <div class="filter-panel">
+                <div class="category-filters">
+                    <button class="filter-btn active" data-type="all">Усі</button>
+                    <button class="filter-btn" data-type="phone">Телефони</button>
+                    <button class="filter-btn" data-type="laptop">Ноутбуки</button>
+                    <button class="filter-btn" data-type="tablet">Планшети</button>
+                </div>
+                <select id="sort-select">
+                    <option value="default">Сортувати за...</option>
+                    <option value="name-asc">Назва (А-Я)</option>
+                    <option value="name-desc">Назва (Я-А)</option>
+                    <option value="price-asc">Ціна: від дешевих</option>
+                    <option value="price-desc">Ціна: від дорогих</option>
+                </select>
+                <div class="price-filter">
+                    <input type="number" id="min-price" placeholder="Мін. ціна" min="0">
+                    <input type="number" id="max-price" placeholder="Макс. ціна" min="0">
+                    <button id="apply-price-filter">Застосувати</button>
+                </div>
+            </div>
+            <div id="product-grid" class="product-grid"></div>
+        </section>
+
+        <!-- ГРАФІКИ -->
+        <section id="analytics-section">
+            <h2>Статистика товарів</h2>
+            <div class="chart-controls">
+                <label>Оберіть вид графіку: </label>
+                <select id="chart-type-selector">
+                    <option value="pie">Аналітика категорій</option>
+                    <option value="bar">Порівняння цін на гаджети</option>
+                    <option value="line">Динаміка знижок по моделях</option>
+                    <option value="popularity" class="admin-only">Популярність товарів</option>
+                </select>
+            </div>
+            <div class="chart-container">
+                <canvas id="myChart"></canvas>
+            </div>
+        </section>
+
+        <!-- 🔹 АДМІН-ПАНЕЛЬ: Додавання товару (видна тільки адміну) -->
+        <details id="admin-add-panel" class="admin-only"
+            style="display:none; margin:20px auto; max-width:600px; background:white; padding:15px; border-radius:10px;">
+            <summary style="cursor:pointer; font-weight:bold; margin-bottom:10px;">🛠️ Додати новий товар (адмін)
+            </summary>
+
+            <form id="admin-add-form" style="display:flex; flex-direction:column; gap:10px;">
+                <input type="text" id="new-name" placeholder="Назва *" required style="padding:8px;">
+                <input type="number" id="new-price" placeholder="Ціна (грн) *" required min="0" style="padding:8px;">
+                <select id="new-type" required style="padding:8px;">
+                    <option value="">Оберіть тип *</option>
+                    <option value="phone">Телефон</option>
+                    <option value="laptop">Ноутбук</option>
+                    <option value="tablet">Планшет</option>
+                </select>
+                <textarea id="new-desc" placeholder="Опис" rows="2" style="padding:8px;"></textarea>
+                <input type="url" id="new-image" placeholder="URL зображення" style="padding:8px;">
+                <input type="number" id="new-discount" placeholder="Знижка %" min="0" max="100" value="0"
+                    style="padding:8px;">
+
+                <button type="submit"
+                    style="background:#28a745; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">
+                    ➕ Додати товар
+                </button>
+                <span id="admin-add-message" style="text-align:center; font-size:0.9rem;"></span>
+            </form>
+        </details>
+    </main>
+
+    <!-- 🔐 МОДАЛЬНЕ ВІКНО АВТОРИЗАЦІЇ/РЕЄСТРАЦІЇ -->
+    <div id="auth-modal" class="modal-overlay modal-hidden">
+        <div class="modal-content">
+            <span id="close-auth" class="close-btn">&times;</span>
+
+            <div class="auth-tabs">
+                <button id="show-login" class="tab-btn active">Вхід</button>
+                <button id="show-register" class="tab-btn">Реєстрація</button>
+            </div>
+
+            <!-- Форма ВХОДУ -->
+            <form id="login-form" class="auth-form">
+                <h3>Вхід</h3>
+                <div class="form-group">
+                    <label>Логін *</label>
+                    <input type="text" id="login-username" name="username" required minlength="3"
+                        pattern="[A-Za-z0-9_]+" title="3+ символів: латиниця, цифри, _">
+                    <span class="error-msg" id="login-error"></span>
+                </div>
+                <div class="form-group">
+                    <label>Пароль *</label>
+                    <input type="password" id="login-password" name="password" required minlength="6">
+                </div>
+                <button type="submit" class="submit-btn">Увійти</button>
+                <p id="login-message" class="auth-message"></p>
+            </form>
+
+            <!-- Форма РЕЄСТРАЦІЇ -->
+            <form id="register-form" class="auth-form modal-hidden">
+                <h3>Реєстрація</h3>
+                <div class="form-group">
+                    <label>Логін *</label>
+                    <input type="text" id="register-username" name="username" required minlength="3" maxlength="20"
+                        pattern="[A-Za-z0-9_]+">
+                    <span class="error-msg" id="reg-username-error"></span>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="register-email" name="email" required>
+                    <span class="error-msg" id="reg-email-error"></span>
+                </div>
+                <div class="form-group">
+                    <label>Пароль *</label>
+                    <input type="password" id="register-password" name="password" required minlength="8"
+                        pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{8,}"
+                        title="Мін. 8 символів: велика+мала літера+цифра">
+                    <span class="error-msg" id="reg-password-error"></span>
+                    <div class="password-strength" id="pwd-strength"></div>
+                </div>
+                <div class="form-group">
+                    <label>Повторіть пароль *</label>
+                    <input type="password" id="register-confirm" name="confirm" required>
+                    <span class="error-msg" id="reg-confirm-error"></span>
+                </div>
+                <button type="submit" class="submit-btn">Зареєструватися</button>
+                <p id="register-message" class="reg-message"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- 🛒 КОШИК -->
+    <div id="cart-modal" class="modal-overlay modal-hidden">
+        <div class="modal-content">
+            <span id="close-cart" class="close-btn">&times;</span>
+            <h2>Ваш кошик</h2>
+            <div id="cart-items"></div>
+            <div class="cart-footer">
+                <p>Загальна сума: <span id="cart-total">0</span> грн</p>
+                <button id="checkout-btn">Відправити замовлення</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ПІДПИСКА -->
+    <div id="subscribe-window" class="bottom-banner modal-hidden">
+        <p>Бажаєте отримувати новини про знижки?</p>
+        <button id="sub-accept">Підписатися</button>
+        <button id="sub-decline">Ні, дякую</button>
+    </div>
+
+    <!-- КНОПКА НАГОРУ -->
+    <button id="scroll-top">⇪</button>
+
+    <!-- 📦 СКРИПТИ (порядок важливий!) -->
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,163 @@
+{
+    "products": [
+        {
+            "id": 1,
+            "name": "iPhone 15 Pro",
+            "price": 35000,
+            "type": "phone",
+            "image": "img/iphone15pro.jpg",
+            "desc": "Дисплей Super Retina XDR, процесор A17 Pro, титановий корпус. Камера Pro з 5-кратним оптичним зумом, підтримка 5G.",
+            "discount": 10,
+            "popularity": 16
+        },
+        {
+            "id": 2,
+            "name": "Samsung Galaxy S23 Ultra",
+            "price": 30000,
+            "type": "phone",
+            "image": "img/samsungs23ultra.jpg",
+            "desc": "Камера 200 Мп, вбудоване перо S Pen, дисплей Dynamic AMOLED 2X, процесор Snapdragon 8 Gen 2, підтримка 5G.",
+            "discount": 15,
+            "popularity": 10
+        },
+        {
+            "id": 3,
+            "name": "MacBook Air M2",
+            "price": 48999,
+            "type": "laptop",
+            "image": "img/macbookairm2.jpg",
+            "desc": "Дисплей Retina 13.6 дюйма, процесор Apple M2, до 18 годин автономної роботи, тонкий та легкий дизайн.",
+            "discount": 0,
+            "popularity": 4
+        },
+        {
+            "id": 4,
+            "name": "ASUS ROG Zephyrus 16",
+            "price": 74900,
+            "type": "laptop",
+            "image": "img/asusrogzephyrus.jpg",
+            "desc": "Ультрасучасний дизайн і легкість, потужність і продуктивність Intel Core Ultra 9, ефективна система охолодження і безшумна робота, неперевершений OLED-дисплей для повного занурення.",
+            "discount": 20,
+            "popularity": 6
+        },
+        {
+            "id": 5,
+            "name": "iPad Air 5",
+            "price": 26650,
+            "type": "tablet",
+            "image": "img/ipadair5.jpg",
+            "desc": "Дисплей Retina 10.9 дюйма, процесор Apple M1, підтримка Apple Pencil 2-го покоління, тонкий та легкий дизайн.",
+            "discount": 8,
+            "popularity": 5
+        },
+        {
+            "id": 6,
+            "name": "Google Pixel 7 Pro",
+            "price": 25499,
+            "type": "phone",
+            "image": "img/googlepixel7pro.jpg",
+            "desc": "Камера 50 Мп, дисплей LTPO OLED 6.7 дюйма, процесор Google Tensor G2, підтримка 5G.",
+            "discount": 12,
+            "popularity": 7
+        },
+        {
+            "id": 7,
+            "name": "Samsung Galaxy Tab S8",
+            "price": 22000,
+            "type": "tablet",
+            "image": "img/samsunggalaxytabs8.jpg",
+            "desc": "Дисплей AMOLED 12.4 дюйма, процесор Snapdragon 8 Gen 2, підтримка S Pen, до 10 годин автономної роботи.",
+            "discount": 0,
+            "popularity": 8
+        },
+        {
+            "id": 8,
+            "name": "Lenovo Legion 5 Pro",
+            "price": 74807,
+            "type": "laptop",
+            "image": "img/lenovolegion5pro.jpg",
+            "desc": "Потужний комп'ютер для ігор та професійної роботи, дисплей 16 дюймів, процесор Intel Core i7, 16 ГБ оперативної пам'яті.",
+            "discount": 20,
+            "popularity": 5
+        },
+        {
+            "id": 9,
+            "name": "Xiaomi 13 Ultra",
+            "price": 32000,
+            "type": "phone",
+            "image": "img/xiaomi13u.jpg",
+            "desc": "Професійна камера Leica, дисплей WQHD+, надшвидка зарядка 90 Вт.",
+            "discount": 5,
+            "popularity": 13
+        }
+    ],
+    "news": [
+        {
+            "id": 1,
+            "title": "Нова поставка",
+            "date": "2024-04-10",
+            "time": "10:30",
+            "status": "usual",
+            "text": "Ми отримали нову поставку iPhone! Поспішайте."
+        },
+        {
+            "id": 2,
+            "title": "АКЦІЯ",
+            "date": "2024-04-17",
+            "time": "12:00",
+            "status": "very-important",
+            "text": "Знижки до 30% на всі планшети лише сьогодні!"
+        },
+        {
+            "id": 3,
+            "title": "Технічні роботи",
+            "date": "2024-04-19",
+            "time": "23:45",
+            "status": "important",
+            "text": "Сайт буде недоступний з 24:00 до 03:00."
+        },
+        {
+            "id": 4,
+            "title": "Новий Xiaomi вже тут",
+            "date": "2024-04-20",
+            "time": "15:20",
+            "status": "usual",
+            "text": "Зустрічайте флагман Xiaomi 13 Ultra у нашому магазині!"
+        },
+        {
+            "id": 5,
+            "title": "Нічний розпродаж",
+            "date": "2024-04-21",
+            "time": "21:00",
+            "status": "important",
+            "text": "Тільки вночі знижки на всі ноутбуки ASUS!"
+        }
+    ],
+    "hotDeals": [
+        {
+            "id": 1,
+            "image": "img/hotdeal1.jpg",
+            "title": "Гаряча пропозиція на iPhone 15 Pro!",
+            "link": "#"
+        },
+        {
+            "id": 2,
+            "image": "img/hotdeal2.jpg",
+            "title": "Знижки на ноутбуки ASUS ROG Zephyrus!",
+            "link": "#"
+        },
+        {
+            "id": 3,
+            "image": "img/hotdeal3.jpg",
+            "title": "Спеціальна пропозиція на планшети Samsung Galaxy Tab S8!",
+            "link": "#"
+        }
+    ],
+    "adminUser": {
+        "id": 0,
+        "username": "admin",
+        "password": "admin123!",
+        "email": "admin@gadgethub.ua",
+        "role": "admin"
+    }
+}
