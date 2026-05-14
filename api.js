@@ -1,9 +1,9 @@
-// 🔄 api.js — CRUD через localStorage (імітація сервера)
+// api.js — CRUD через localStorage (імітація сервера)
 
 (function () {
   "use strict";
 
-  // 🔹 GET: отримати товари (з localStorage або з App.products)
+  // GET: отримати товари (з localStorage або з App.products)
   async function fetchProducts() {
     const stored = localStorage.getItem("products");
     if (stored) {
@@ -12,8 +12,8 @@
     // Fallback на початкові дані
     return App.products;
   }
-  
-  // 🔹 Збільшити популярність (з правильною синхронізацією)
+
+  // Збільшити популярність (з правильною синхронізацією)
   async function incrementPopularity(productId) {
     const products = await fetchProducts();
     const product = products.find((p) => p.id === productId);
@@ -22,7 +22,7 @@
       product.popularity = (product.popularity || 0) + 1;
       localStorage.setItem("products", JSON.stringify(products));
 
-      // 🔹 Синхронізуємо з ГЛОБАЛЬНИМ станом (App.products)
+      // Синхронізуємо з ГЛОБАЛЬНИМ станом (App.products)
       if (window.App?.products) {
         const globalProduct = App.products.find((p) => p.id === productId);
         if (globalProduct) {
@@ -30,7 +30,7 @@
         }
       }
 
-      // 🔹 Синхронізуємо з currentProducts (для графіків)
+      // Синхронізуємо з currentProducts (для графіків)
       if (window.App?.state?.currentProducts) {
         const currentProduct = App.state.currentProducts.find(
           (p) => p.id === productId,
@@ -41,7 +41,7 @@
       }
     }
   }
-  // 🔹 POST: додати товар (тільки адмін)
+  // POST: додати товар (тільки адмін)
   async function createProduct(productData) {
     if (!Auth.isAdmin()) throw new Error("❌ Потрібні права адміністратора");
 
@@ -57,7 +57,7 @@
     return newProduct;
   }
 
-  // 🔹 PUT: оновити товар
+  // PUT: оновити товар
   async function updateProduct(id, updates) {
     if (!Auth.isAdmin()) throw new Error("❌ Доступ заборонено");
 
@@ -74,7 +74,7 @@
     return products[index];
   }
 
-  // 🔹 DELETE: видалити товар
+  // DELETE: видалити товар
   async function deleteProduct(id) {
     if (!Auth.isAdmin()) throw new Error("❌ Доступ заборонено");
 
@@ -87,7 +87,7 @@
     return true;
   }
 
-  // 🔹 Експорт
+  // Експорт
   window.API = {
     fetchProducts,
     createProduct,
