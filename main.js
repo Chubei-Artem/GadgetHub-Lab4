@@ -1,6 +1,8 @@
 // main.js — Глобальний стан + ініціалізація + основна логіка додатку
+// ГЛОБАЛЬНІ ЗМІННІ
+let newsLimit = 3; // Кількість новин для відображення
+let myChartInstance = null; // Екземпляр графіка Chart.js
 // ГЛОБАЛЬНИЙ СТАН ДОДАТКУ
-
 window.App = {
     products: [], // Масив товарів (завантажується з data.json)
     news: [], // Масив новин
@@ -42,77 +44,75 @@ function showMessage(elementId, type, text) {
 
 // Показує/приховує адмін-панель додавання товару
 function updateAdminPanel() {
-    const adminPanel = document.getElementById("admin-add-panel");
-    if (adminPanel) {
-        adminPanel.style.display = Auth.isAdmin() ? "block" : "none";
+    const panel = document.getElementById("admin-add-panel");
+    if (panel) {
+        panel.style.display = App.state.currentUser?.role === "admin" ? "block" : "none";
     }
 }
 
 // Показує/приховує опцію "Популярність" в графіках (тільки для адміна)
 function updateChartOptions() {
-    const popularityOption = document.querySelector(
-        '#chart-type-selector option[value="popularity"]',
-    );
-    if (popularityOption) {
-        popularityOption.style.display = Auth.isAdmin() ? "block" : "none";
+    const option = document.querySelector("#chart-type-selector option[value='popularity']");
+    if (option) {
+        option.style.display = App.state.currentUser?.role === "admin" ? "block" : "none";
     }
-
-    // Якщо адмін вийшов і був вибраний графік популярності — переключаємо на pie
-    if (!Auth.isAdmin()) {
+    if (App.state.currentUser?.role !== "admin") {
         const selector = document.getElementById("chart-type-selector");
-        if (selector?.value === "popularity") {
+        if (selector.value === "popularity") {
             selector.value = "pie";
             renderAnalytics();
         }
     }
 }
 
-// ЗАВАНТАЖЕННЯ ДАНИХ З JSON (вимога лабораторної)
-
-/**
- * Завантажує дані з data.json через fetch()
- * При помилці використовує fallback-дані
- */
+// ЗАВАНТАЖЕННЯ ДАНИХ З БЕКЕНДУ (API) 
+// Завантажує дані з бекенду, якщо він доступний, інакше використовує data.json
 async function loadData() {
     try {
-        const response = await fetch("data.json");
-        if (!response.ok) throw new Error("HTTP " + response.status);
+        // Завантажуємо товари з сервера
+        const products = await API.fetchProducts();
 
-        const data = await response.json(); // Розпарсили JSON!
+        // Розпаковуємо description як JSON, щоб отримати додаткові поля (type, discount)
+        App.products = products.map((p) => {
+            let extra = {};
+            try {
+                extra = JSON.parse(p.description); // Розпаковуємо наш JSON
+            } catch (e) {
+                extra = { desc: p.description }; // Про всяк випадок якщо це старий товар
+            }
 
-        // Зберегли в глобальний стан
-        App.products = data.products || [];
+            return {
+                ...p,
+                id: p._id || p.id,
+                desc: extra.desc || "Опис відсутній",
+                type: extra.type || "other",
+                discount: extra.discount || 0,
+            };
+        });
+        // Завантажуємо новини та акції з data.json
+        const fallback = await fetch("data.json");
+        const data = await fallback.json();
         App.news = data.news || [];
         App.deals = data.hotDeals || [];
         App.state.currentProducts = [...App.products];
-
-        // Ініціалізуємо адміна в localStorage, якщо ще немає
-        if (data.adminUser && !localStorage.getItem("users")) {
-            localStorage.setItem("users", JSON.stringify([data.adminUser]));
-        }
-
-        console.log("✅ Дані завантажено з data.json");
+        // перевірка
+        console.log("Дані завантажено з бекенду API");
     } catch (error) {
-        console.warn(
-            "⚠️ Не вдалося завантажити data.json, використовуємо резервні дані",
-        );
-
-        // Fallback: мінімальні дані для тесту без сервера
-        App.products = [
-            {
-                id: 1,
-                name: "Demo Product",
-                price: 1000,
-                type: "phone",
-                image: "",
-                desc: "",
-                discount: 0,
-                popularity: 0,
-            },
-        ];
-        App.news = [];
-        App.deals = [];
-        App.state.currentProducts = [...App.products];
+        console.warn("Бекенд не відповідає, завантажуємо з data.json");
+        // fallback на data.json
+        try {
+            const response = await fetch("data.json");
+            const data = await response.json();
+            App.products = data.products || [];
+            App.news = data.news || [];
+            App.deals = data.hotDeals || [];
+            App.state.currentProducts = [...App.products];
+        } catch (error) {
+            console.error("Не вдалося завантажити data.json", error);
+            App.products = [];
+            App.news = [];
+            App.deals = [];
+        }
     }
 
     // Після завантаження — рендеримо всі компоненти
@@ -127,7 +127,7 @@ async function loadData() {
 // РЕНДЕР ФУНКЦІЇ (відображення компонентів)
 
 /**
- * Відмальовує сітку товарів з адмін-кнопками (якщо потрібно)
+ * Відмальовує сітку товарів з адмін-кнопками (якщо користувач - адмін)
  * @param {Array} productsList - масив товарів для відображення
  */
 function renderProducts(productsList) {
@@ -154,8 +154,8 @@ function renderProducts(productsList) {
             <button class="add-to-cart-btn" data-id="${product.id}">Додати до кошика</button>
         `;
 
-        // Адмін-кнопки (тільки якщо користувач — адмін!)
-        if (Auth.isAdmin()) {
+        // Адмін-кнопки (тільки якщо користувач - адмін)
+        if (App.state.currentUser?.role === "admin") {
             cardHTML += `
                 <div class="admin-actions" style="margin-top:10px; display:flex; gap:5px;">
                     <button class="admin-edit-btn" data-id="${product.id}" 
@@ -183,12 +183,12 @@ function renderProducts(productsList) {
     });
 
     // Обробники адмін-кнопок (делегування подій)
-    if (Auth.isAdmin()) {
+    if (App.state.currentUser?.role === "admin") {
         grid.querySelectorAll(".admin-edit-btn").forEach((btn) => {
-            btn.onclick = (e) => adminEditProduct(parseInt(e.target.dataset.id));
+            btn.onclick = (e) => adminEditProduct(e.target.dataset.id);
         });
         grid.querySelectorAll(".admin-delete-btn").forEach((btn) => {
-            btn.onclick = (e) => adminDeleteProduct(parseInt(e.target.dataset.id));
+            btn.onclick = (e) => adminDeleteProduct(e.target.dataset.id);
         });
     }
 }
@@ -259,8 +259,7 @@ function renderNewsSidebar() {
         .join("");
 
     if (btn)
-        btn.textContent =
-            newsLimit >= App.news.length ? "Менше новин" : "Більше новин";
+        btn.textContent = newsLimit >= App.news.length ? "Менше новин" : "Більше новин";
 }
 
 /**
@@ -349,7 +348,7 @@ function renderAnalytics() {
                 },
             },
         });
-        return; // ← ВАЖЛИВО: не створювати другий графік!
+        return; // не створювати другий графік
     } else {
         // pie chart — групуємо за типом товару
         const stats = {};
@@ -394,13 +393,11 @@ function renderAnalytics() {
 }
 
 // АВТОРИЗАЦІЯ: форми, валідація, оновлення інтерфейсу
-
-
 /**
  * Налаштовує обробники подій для форм входу/реєстрації
  */
 function setupAuthForms() {
-    // Перемикач вкладок: Вхід ↔ Реєстрація
+    // Перемикач вкладок: Вхід Реєстрація
     document.getElementById("show-register")?.addEventListener("click", (e) => {
         e.preventDefault();
         document.getElementById("login-form").classList.add("modal-hidden");
@@ -429,7 +426,7 @@ function setupAuthForms() {
         });
 
     // Форма РЕЄСТРАЦІЇ (детальні помилки)
-    document.getElementById("register-form")?.addEventListener("submit", (e) => {
+    document.getElementById("register-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
         clearMessages();
 
@@ -455,7 +452,7 @@ function setupAuthForms() {
             hasError = true;
         }
 
-        // Перевірка пароля (детальні помилки!)
+        // Перевірка пароля (детальні помилки)
         const pwdResult = Auth.validatePassword(password);
         if (!pwdResult.valid) {
             document.getElementById("reg-password-error").textContent =
@@ -476,7 +473,7 @@ function setupAuthForms() {
         }
 
         // Успішна реєстрація
-        const result = Auth.register(username, email, password);
+        const result = await API.register(username, email, password);
         showMessage(
             "register-message",
             result.success ? "success" : "error",
@@ -492,35 +489,41 @@ function setupAuthForms() {
         }
     });
 
-    // Форма ВХОДУ (загальні помилки — безпека!)
-    document.getElementById("login-form")?.addEventListener("submit", (e) => {
-        e.preventDefault();
-        clearMessages();
+    // Форма ВХОДУ (загальні помилки)
+    document
+        .getElementById("login-form")
+        ?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            clearMessages();
 
-        const username = document.getElementById("login-username").value.trim();
-        const password = document.getElementById("login-password").value;
+            const username = document.getElementById("login-username").value.trim();
+            const password = document.getElementById("login-password").value;
 
-        if (!username || !password) {
-            showMessage("login-message", "error", "Заповніть усі поля");
-            return;
-        }
+            if (!username || !password) {
+                showMessage("login-message", "error", "Заповніть усі поля");
+                return;
+            }
 
-        const result = Auth.login(username, password);
-        // Загальне повідомлення — БЕЗ деталей (security best practice)
-        showMessage(
-            "login-message",
-            result.success ? "success" : "error",
-            result.message,
-        );
+            // ВИКЛИКАЄМО СЕРВЕР
+            const result = await API.login(username, password);
 
-        if (result.success) {
-            updateAuthUI();
-            setTimeout(() => {
-                document.getElementById("auth-modal").classList.add("modal-hidden");
-                document.getElementById("login-form").reset();
-            }, 1500);
-        }
-    });
+            showMessage(
+                "login-message",
+                result.success ? "success" : "error",
+                result.success ? "Вхід успішний!" : result.message,
+            );
+
+            if (result.success && result.user) {
+                App.state.currentUser = result.user;
+                localStorage.setItem("currentUser", JSON.stringify(result.user));
+
+                updateAuthUI();
+                setTimeout(() => {
+                    document.getElementById("auth-modal").classList.add("modal-hidden");
+                    document.getElementById("login-form").reset();
+                }, 1500);
+            }
+        });
 
     // Закриття модального вікна
     document.getElementById("close-auth")?.addEventListener("click", () => {
@@ -641,7 +644,7 @@ function setupFilters() {
  * @param {number} productId - ID товару
  */
 async function addToCartAdvanced(productId) {
-    const product = App.products.find((p) => p.id === productId);
+    const product = App.products.find((p) => p.id === productId || p._id === productId);
     const existing = App.state.cart.find((item) => item.id === productId);
 
     if (existing) {
@@ -710,7 +713,7 @@ function handleCheckout(e) {
 window.adminEditProduct = async (id) => {
     if (!Auth.isAdmin()) return alert("❌ Доступ заборонено");
 
-    const product = App.products.find((p) => p.id === id);
+    const product = App.products.find((p) => p.id === id || p._id === id);
     if (!product) return alert("❌ Товар не знайдено");
 
     // Прості prompt для швидкого редагування
@@ -748,7 +751,7 @@ window.adminEditProduct = async (id) => {
 window.adminDeleteProduct = async (id) => {
     if (!Auth.isAdmin()) return alert("❌ Доступ заборонено");
 
-    const product = App.products.find((p) => p.id === id);
+    const product = App.products.find((p) => p.id === id || p._id === id);
     if (!product) return alert("❌ Товар не знайдено");
 
     // Підтвердження видалення
@@ -912,7 +915,7 @@ function setupDragAndDrop() {
     cartIconBtn.ondrop = (e) => {
         e.preventDefault();
         cartIconBtn.style.transform = "scale(1)";
-        const id = parseInt(e.dataTransfer.getData("productId"));
+        const id = e.dataTransfer.getData("productId");
         if (id) {
             addToCartAdvanced(id);
             cartIconBtn.style.background = "#28a745";
@@ -942,7 +945,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("product-grid")?.addEventListener("click", (e) => {
         const btn = e.target.closest(".add-to-cart-btn");
         if (btn) {
-            const id = parseInt(btn.dataset.id);
+            const id = btn.dataset.id;
             addToCartAdvanced(id);
         }
     });
@@ -969,11 +972,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 7. Обробник зміни типу графіка
+    // Обробник зміни типу графіка
     const chartSelector = document.getElementById("chart-type-selector");
     if (chartSelector) chartSelector.onchange = renderAnalytics;
 
-    // 8. Ініціалізуємо опції графіків (адмін/користувач)
+    // Ініціалізуємо опції графіків (адмін/користувач)
     updateChartOptions();
 
     // Налаштовуємо підписку, рекламу, scroll-top
@@ -1003,16 +1006,12 @@ document.addEventListener("DOMContentLoaded", () => {
             `translateX(-${currentSlide * 100}%)`;
     });
 
-    // 13. Кнопка виходу з акаунту
+    // Кнопка виходу з акаунту
     document.getElementById("logout-btn")?.addEventListener("click", () => {
         Auth.logout();
         updateAuthUI();
-        alert("✅ Ви успішно вийшли з системи");
+        alert("Ви успішно вийшли з системи");
     });
 
-    console.log("🚀 GadgetHub ініціалізовано!");
+    console.log("GadgetHub ініціалізовано!");
 });
-
-// ГЛОБАЛЬНІ ЗМІННІ (для зручності в HTML обробниках)
-let newsLimit = 3; // Кількість новин для відображення
-let myChartInstance = null; // Екземпляр графіка Chart.js
